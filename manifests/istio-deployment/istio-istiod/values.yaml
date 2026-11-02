@@ -1,0 +1,30 @@
+pilot:
+  traceSampling: 0.25
+  resources:
+    requests:
+      cpu: 64m
+      memory: 128Mi
+    limits:
+      cpu: 1024m
+      memory: 2048Mi
+  env:
+    PILOT_ENABLE_EDS_FOR_HEADLESS_SERVICES: "true"
+
+global:
+  logAsJson: true
+  defaultResources:
+    requests:
+      cpu: 35m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+  proxy:
+    holdApplicationUntilProxyStarts: true
+    resources:
+      requests:
+        cpu: 35m
+        memory: 128Mi
+      limits:
+        cpu: 200m
+        memory: 128Mi
