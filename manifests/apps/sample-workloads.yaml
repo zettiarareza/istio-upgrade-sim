@@ -1,0 +1,100 @@
+---
+# Analog "hris" - Deployment biasa dengan sidecar
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hris-sim
+  namespace: default
+  labels:
+    app: hris-sim
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: hris-sim
+  template:
+    metadata:
+      labels:
+        app: hris-sim
+    spec:
+      containers:
+        - name: app
+          image: nginx:alpine
+          ports:
+            - containerPort: 80
+
+---
+# Analog "hris-mq" - Deployment dengan init container check (mirip wget-gate kamu)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hris-mq-sim
+  namespace: default
+  labels:
+    app: hris-mq-sim
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hris-mq-sim
+  template:
+    metadata:
+      labels:
+        app: hris-mq-sim
+    spec:
+      # CATATAN: holdApplicationUntilProxyStarts (setara fix wget-check kamu)
+      # bekerja lewat pilot-agent MEMBUNGKUS entrypoint container app itu
+      # sendiri saat sidecar injection -- BUKAN lewat init container terpisah.
+      # Init container tidak bisa mengecek sidecar karena sidecar belum start
+      # sama sekali sebelum semua init container selesai (kecuali pakai
+      # Kubernetes native sidecar container, restartPolicy: Always, K8s 1.29+).
+      # Behavior ini otomatis didapat dari annotasi proxy config Istio,
+      # jadi kita tidak perlu tulis init container manual di sini.
+      containers:
+        - name: app
+          image: nginx:alpine
+          ports:
+            - containerPort: 80
+
+---
+# Analog "nsq-nsqlookupd" - StatefulSet headless service
+apiVersion: v1
+kind: Service
+metadata:
+  name: nsq-nsqlookupd-sim
+  namespace: default
+  labels:
+    app: nsq-nsqlookupd-sim
+spec:
+  clusterIP: None
+  selector:
+    app: nsq-nsqlookupd-sim
+  ports:
+    - name: tcp
+      port: 4160
+      targetPort: 4160
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: nsq-nsqlookupd-sim
+  namespace: default
+spec:
+  serviceName: nsq-nsqlookupd-sim
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nsq-nsqlookupd-sim
+  template:
+    metadata:
+      labels:
+        app: nsq-nsqlookupd-sim
+    spec:
+      containers:
+        - name: nsqlookupd
+          image: nsqio/nsq:v1.2.1
+          command: ["/nsqlookupd"]
+          ports:
+            - containerPort: 4160
+            - containerPort: 4161

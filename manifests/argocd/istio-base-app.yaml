@@ -1,0 +1,41 @@
+---
+# Meniru Application "istio-base" central-manifest kamu.
+# Karena dibuat BERSIH dari awal (bukan adopsi CRD lama), seharusnya TIDAK
+# akan ketemu masalah ownership metadata seperti simulasi pertama kita --
+# itu cuma muncul karena cluster staging kamu punya histori CRD dari Helm 2
+# (Tiller) jaman dulu. Di sini kita mulai bersih, representatif untuk
+# cluster BARU / clean install, bukan untuk mensimulasikan migrasi historis.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: sim-istio-base
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: 'https://istio-release.storage.googleapis.com/charts'
+    chart: base
+    targetRevision: 1.18.7   # <-- ganti ke 1.18.7 saat simulasi upgrade
+    helm:
+      releaseName: istio-base
+      values: |
+        global:
+          istioNamespace: istio-system
+        base:
+          enableCRDTemplates: false
+        defaultRevision: "default"
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: istio-system
+  syncPolicy:
+    automated:
+      prune: true
+    syncOptions:
+      - CreateNamespace=true
+  ignoreDifferences:
+    # Known behavior: istiod mem-patch failurePolicy Ignore->Fail saat sehat
+    - group: admissionregistration.k8s.io
+      kind: ValidatingWebhookConfiguration
+      name: istiod-default-validator
+      jqPathExpressions:
+        - '.webhooks[]?.failurePolicy'
