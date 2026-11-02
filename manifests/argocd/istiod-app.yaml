@@ -9,7 +9,7 @@ spec:
   sources:
     sources:
     - repoURL: 'https://istio-release.storage.googleapis.com/charts'
-      chart: base
+      chart: istiod
       targetRevision: 1.21.6   # <-- ganti ke 1.18.7 saat simulasi upgrade
       helm:
         releaseName: istio-base
