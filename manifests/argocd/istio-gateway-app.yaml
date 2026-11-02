@@ -9,62 +9,17 @@ metadata:
   namespace: argocd
 spec:
   project: default
-  source:
-    repoURL: 'https://istio-release.storage.googleapis.com/charts'
-    chart: gateway
-    targetRevision: 1.31.2   # <-- ganti ke 1.18.7 saat simulasi upgrade
-    helm:
-      releaseName: istio-ingressgateway
-      values: |
-        replicaCount: 2
-
-        rbac:
-          enabled: true
-
-        serviceAccount:
-          create: true
-
-        podAnnotations:
-          prometheus.io/port: "15020"
-          prometheus.io/scrape: "true"
-          prometheus.io/path: "/stats/prometheus"
-          inject.istio.io/templates: "gateway"
-          sidecar.istio.io/inject: "true"
-
-        service:
-          type: LoadBalancer
-          ports:
-            - name: status-port
-              port: 15021
-              protocol: TCP
-              targetPort: 15021
-            - name: http2
-              port: 80
-              protocol: TCP
-              targetPort: 80
-            - name: https
-              port: 443
-              protocol: TCP
-              targetPort: 443
-          annotations: {}
-          # Diisi bebas -- di kind field ini tidak difulfill oleh controller
-          # manapun (tidak ada cloud provider), jadi tidak akan membuat error
-          # apapun kalau diisi IP "palsu". EXTERNAL-IP tetap <pending> sampai
-          # kita patch status manual di step berikutnya (05-fake-external-ip.sh)
-          loadBalancerIP: "34.101.252.126"
-          externalTrafficPolicy: "Local"
-
-        resources:
-          requests:
-            cpu: 50m
-            memory: 128Mi
-          limits:
-            cpu: 200m
-            memory: 256Mi
-
-        labels:
-          app: istio-ingressgateway
-          istio: istio-ingressgateway
+  sources:
+    - repoURL: 'https://istio-release.storage.googleapis.com/charts'
+      chart: base
+      targetRevision: 1.21.6   # <-- ganti ke 1.18.7 saat simulasi upgrade
+      helm:
+        releaseName: istio-base
+        valueFiles:
+        - $values/manifests/istio-deployment/istio-gateway/values.yaml
+    - repoURL: 'git@github.com:zettiarareza/istio-upgrade-sim.git'
+      targetRevision: main
+      ref: values
   destination:
     server: https://kubernetes.default.svc
     namespace: istio-system

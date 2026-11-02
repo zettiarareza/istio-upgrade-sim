@@ -1,0 +1,45 @@
+replicaCount: 2
+
+rbac:
+  enabled: true
+
+serviceAccount:
+  create: true
+
+podAnnotations:
+  prometheus.io/port: "15020"
+  prometheus.io/scrape: "true"
+  prometheus.io/path: "/stats/prometheus"
+  inject.istio.io/templates: "gateway"
+  sidecar.istio.io/inject: "true"
+
+service:
+  type: LoadBalancer
+  ports:
+    - name: status-port
+      port: 15021
+      protocol: TCP
+      targetPort: 15021
+    - name: http2
+      port: 80
+      protocol: TCP
+      targetPort: 80
+    - name: https
+      port: 443
+      protocol: TCP
+      targetPort: 443
+  annotations: {}
+  loadBalancerIP: "34.101.252.126"
+  externalTrafficPolicy: "Local"
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    cpu: 200m
+    memory: 256Mi
+
+labels:
+  app: istio-ingressgateway
+  istio: istio-ingressgateway
