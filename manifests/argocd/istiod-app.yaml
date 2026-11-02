@@ -29,6 +29,6 @@ spec:
     # Known behavior: istiod mem-patch failurePolicy Ignore->Fail saat sehat
     - group: admissionregistration.k8s.io
       kind: ValidatingWebhookConfiguration
-      name: istiod-default-validator
+      name: istio-validator-istio-system
       jqPathExpressions:
         - '.webhooks[]?.failurePolicy'
