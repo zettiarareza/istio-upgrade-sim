@@ -12,7 +12,7 @@ spec:
   source:
     repoURL: 'https://istio-release.storage.googleapis.com/charts'
     chart: gateway
-    targetRevision: 1.18.7   # <-- ganti ke 1.18.7 saat simulasi upgrade
+    targetRevision: 1.31.2   # <-- ganti ke 1.18.7 saat simulasi upgrade
     helm:
       releaseName: istio-ingressgateway
       values: |
